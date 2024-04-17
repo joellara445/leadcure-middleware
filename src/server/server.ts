@@ -3,6 +3,7 @@
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+import "reflect-metadata"
 import express from 'express';
 const bodyParser = require('body-parser');
 const app = express();
