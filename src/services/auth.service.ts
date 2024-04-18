@@ -1,107 +1,93 @@
-
+import { CreateUserDto } from "../data/dto/createuser.dto";
+import { AppDataSource } from "../../src/data-source"
+import { User } from "../models/user.model";
+import { CreateUserResponse } from "../data/response/createuser.response";
+import { ErrorCode } from "../common/utils/errors";
+import * as bcrypt from 'bcrypt';
+import { Constants } from "../common/utils/constants";
+import { LoginUserDto } from "../data/dto/loginuser.dto";
+import { LoginUserResponse } from "../data/response/loginuser.response";
+import { Session } from "../models/session.model";
+var jwt = require('jsonwebtoken');
 
 export class AuthService {
 
-    constructor(
-        private readonly userRepository: Repository<User>)
+    constructor(){
+    }
 
         async register(createUserDto: CreateUserDto) {
 
-            const { password, tokenPush, ...userData } = createUserDto;
-        
-            const verification = await this.userRepository.createQueryBuilder("us")
+            const { password, ...userData } = createUserDto;
+            const userRepository = await AppDataSource.getRepository(User)
+            const verification = await userRepository
+            .createQueryBuilder("us")
               .andWhere("(us.email = :emal OR us.phone = :phone)")
               .setParameters({ emal: userData.email, phone: userData.phone }).getOne();
-        
             if (verification) {
               if (verification['email'] === userData.email) {
-                throw new BadRequestException({ codeError: ErrorCode.EMAILUNIQUE });
+                let response = new CreateUserResponse(  0, ErrorCode.EMAILUNIQUE, "Email already exists", ErrorCode.EMAILUNIQUE.toString() );  
+                return response;
               } else if (verification['phone'] === userData.phone) {
-                throw new BadRequestException({ codeError: ErrorCode.PHONEUNIQUE });
+                let response = new CreateUserResponse(  0, ErrorCode.PHONEUNIQUE, "Phone already exists", ErrorCode.PHONEUNIQUE.toString() );  
+                return response;
               } else {
-                throw new BadRequestException({ codeError: ErrorCode.UNKNOWN });
+                let response = new CreateUserResponse(  0, ErrorCode.UNKNOWN, "Email already exists", ErrorCode.UNKNOWN.toString() );  
+                return response;
               }
             }
            
             try {
-              const user = this.userRepository.create({ ...userData, password: bcrypt.hashSync(password, 3) });
-              this.emailServiceService.sendConfirmation(user.fullName, user.email);
-              await this.userRepository.save(user)
-        
-              await this._saveSession(user, userData.idDevice, tokenPush);
-        
-              try {
-                const user = await admin.auth().createUser({
-                  email: createUserDto.email,
-                  emailVerified: false,
-                  password: createUserDto.password,
-                  displayName: createUserDto.image,
-                  disabled: false,
-                });
-                const useremail = createUserDto.email;
-                
-                await admin.auth()
-                .generateEmailVerificationLink(useremail, this.actionCodeSettings)
-                .then(async (link) => {
-                  console.log("Verification link:",link);
-                  let body = "Verifica tu cuenta ingresando al siguiente link: "+link;
-                  await this.emailServiceService.sendEmail(createUserDto.email,createUserDto.fullName,"Verifica tu cuenta",body);
-                })
-                .catch((error) => {
-                  console.log("Err link:",error);
-              // Some error occurred.
-                });
-               // return {
-               //   response: user
-               // };
-              } catch (error) {
-                console.log("Error test email"+error.message);
-              }
-        
+              const user = userRepository.create({ ...userData, password: bcrypt.hashSync(password, 3) });
+              //this.emailServiceService.sendConfirmation(user.fullName, user.email);
+              await userRepository.save(user)
               delete user.password;
-              return { user: { ...user, token: this._getJwtToken({ id: user.id, email: user.email, idDevice: userData.idDevice }) } };
+              return { user: { ...user, token: jwt.sign({
+                exp: Math.floor(Date.now() / 1000) + (60 * 60),
+                data:{id: user.id, email: user.email}
+              }, Constants.jsonToken) } };
             } catch (error) {
-              handleDbExceptions(error, this.logger);
+              let response = new CreateUserResponse(  0, ErrorCode.UNKNOWN, "Error:"+error, ErrorCode.UNKNOWN.toString() );  
+                return response;
             }
           }
         
           async login(loginUserDto: LoginUserDto) {
             const { password, email, idDevice, tokenPush } = loginUserDto;
-            const user = await this.userRepository
+            const userRepository = await AppDataSource.getRepository(User)
+            const user = await userRepository
               .findOne({
                 where: { email },
-                select: { image: true, email: true, password: true, passwordTemporary: true, id: true, roles: true, fullName: true, phone: true }
+                select: {  email: true, password: true, passwordTemporary: true, id: true, roles: true, phone: true }
               });
         
             if (!user) {
-              throw new UnauthorizedException('UnauthorizedException');
+              let response = new LoginUserResponse(  0, ErrorCode.UNAUTHORIZED, "Error:"+ErrorCode.UNAUTHORIZED, ErrorCode.UNAUTHORIZED.toString() );  
+                return response;
             }
         
             if (!bcrypt.compareSync(password, user.password) && !bcrypt.compareSync(password, user.passwordTemporary)) {
-              throw new UnauthorizedException('UnauthorizedException');
+              let response = new LoginUserResponse(  0, ErrorCode.UNAUTHORIZED, "Error:Credentials mismatch", ErrorCode.UNAUTHORIZED.toString() );  
+                return response;
             }
         
-            await this._saveSession(user, idDevice, tokenPush);
-            let verified = await admin.auth()
-              .getUserByEmail(user.email)
-              .then((userRecord) => {
-                // See the UserRecord reference doc for the contents of userRecord.
-                
-                console.log(`Successfully fetched user data: ${JSON.stringify(userRecord)}`);
-                return userRecord.emailVerified;
-              })
-              .catch((error) => {
-                console.log('Error fetching user data:', error);
-                return false;
-              });
-              console.log("Verified:",verified);
-              if (verified==false) {
-                throw new UnauthorizedException('No verificado');
-              }
-        
+            
+            await this._saveSession(user, tokenPush);
+            
             delete user.password;
             delete user.passwordTemporary; 
-            return { ...user, token: this._getJwtToken({ id: user.id, email: user.email, idDevice }) };
+            return { ...user, token: jwt.sign({
+              exp: Math.floor(Date.now() / 1000) + (60 * 60),
+              data:{id: user.id, email: user.email}
+            }) };
+          }
+
+
+          private async _saveSession(user: User, tokenPush: string) {
+            const sessionRepository = await AppDataSource.getRepository(Session)
+            if (tokenPush) await sessionRepository.delete({ tokenPush });
+            await sessionRepository.delete({ user: { id: user.id } });
+            const session = sessionRepository.create({ user,  tokenPush });
+            await sessionRepository.save(session);
           }
         
 

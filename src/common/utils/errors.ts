@@ -1,0 +1,9 @@
+export enum ErrorCode {
+    UNAUTHORIZED = 401,
+    ACCOUNTNOTEXIST = 402,
+    NONE = 0,
+    UNKNOWN = 100,
+    EMAILUNIQUE = 101,
+    PHONEUNIQUE = 102,
+    NAMEUNIQUE = 103
+}

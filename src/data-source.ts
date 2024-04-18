@@ -1,16 +1,22 @@
 import { DataSource } from "typeorm/data-source/DataSource";
-import {} from "../src/models/user.model";
+import { User } from "../src/models/user.model";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: "localhost",
+    host: "144.217.95.164",
     port: 5432,
-    username: "test",
-    password: "test",
-    database: "test",
+    username: "postgres",
+    password: "@123456789Abcd@",
+    database: "leadcure",
     synchronize: true,
     logging: true,
-    entities: [Post, Category],
+    entities: [User],
     subscribers: [],
     migrations: [],
 })
+
+AppDataSource.initialize()
+    .then(() => {
+        // here you can start to work with your database
+    })
+    .catch((error) => console.log(error))

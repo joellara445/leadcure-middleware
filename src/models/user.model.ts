@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Session } from "./session.model";
 
 @Entity()
 export class User {
@@ -23,4 +24,14 @@ export class User {
 
     @Column('text', { select: false, nullable: true })
     passwordTemporary: string;
+
+    @Column('text', { array: true, default: ['client'] })
+    roles: string[];
+
+    @OneToMany(
+        () => Session,
+        (session) => session.user,
+        { cascade: true, eager: false }
+    )
+    sessions?: Session[];
 }
