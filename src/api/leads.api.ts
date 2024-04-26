@@ -1,6 +1,7 @@
 'option explicit';
-const express = require('express');
-const api = express.Router();
+let expressapp = require('express');
+const apiLeads = expressapp.Router();
 const leads_controller = require('../controllers/leads.controller');
-api.post('/', leads_controller.clean);
-module.exports = api;
+const noauthLeads = require('../middlewares/noauth.middleware.js');
+apiLeads.post('/', leads_controller.clean);
+module.exports = apiLeads;
