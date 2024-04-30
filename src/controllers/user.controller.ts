@@ -12,6 +12,18 @@ async function getUsers(req, res) {
     }
 }
 
+async function updateUser(req, res) {
+    try {
+        const response = await userService.updateUser(req.body);
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log("Error " + e.toString());
+        return res.status(500).json(e);
+    }
+}
+
+
 module.exports = {
     login,
+    updateUser
 };
