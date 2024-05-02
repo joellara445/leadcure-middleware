@@ -1,7 +1,16 @@
 'option explicit';
-async function clean(req:any, res:any) {
-    console.log('Cleaning up leads'+req);
-    console.log('Cleaning up leads'+res);
+
+const leadsService = require('../services/leads.service');
+async function clean(req: any, res: any) {
+
+    try {
+        let leadResponse = await leadsService.cleanContent(req.body);
+        return res.status(200).json(leadResponse);
+    } catch (e) {
+        console.log("Error " + e.toString());
+        return res.status(500).json(e);
+    }
+
 }
 
 module.exports = {
