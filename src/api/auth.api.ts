@@ -2,8 +2,8 @@
 const expressAuth = require('express');
 const apiAuth = expressAuth.Router();
 const auth_controller = require('../controllers/auth.controller');
-const noauth = require('../middlewares/noauth.middleware.js');
+const noauth = require('../middleware/noauth.middleware.ts');
 apiAuth.post('/login', noauth, auth_controller.login)
-apiAuth.put('/register', noauth, auth_controller.register)
+apiAuth.post('/register', auth_controller.register)
 
 module.exports = apiAuth;

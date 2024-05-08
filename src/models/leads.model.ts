@@ -1,7 +1,6 @@
 import { Column, Entity, Index, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 @Entity()
-@Unique(["lead"])
 export class Lead {
 
     @PrimaryGeneratedColumn('increment')

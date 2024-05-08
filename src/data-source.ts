@@ -1,5 +1,7 @@
 import { DataSource } from "typeorm/data-source/DataSource";
 import { User } from "../src/models/user.model";
+import { Lead } from "./models/leads.model";
+import { Session } from "./models/session.model";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -10,7 +12,7 @@ export const AppDataSource = new DataSource({
     database: "leadcure",
     synchronize: true,
     logging: true,
-    entities: [User],
+    entities: [User, Session, Lead],
     subscribers: [],
     migrations: [],
 })
