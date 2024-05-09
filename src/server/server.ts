@@ -32,7 +32,9 @@ const createApp = () => {
       limit: '10mb',
     })
   );
-
+  app.use('/api/v1/auth', auth_api);
+  app.use('/api/v1/user', user_api);
+  app.use('/api/v1/leads', leads_api);
 
   app.get('/', function (req, res, next) {
     res.status(200).json({
@@ -50,9 +52,7 @@ const createApp = () => {
     if (!err.statusCode) err.statusCode = 500;
     res.status(err.statusCode).send(err.message);
   });
-  app.use('/api/v1/auth', auth_api);
-  app.use('/api/v1/user', user_api);
-  app.use('/api/v1/leads', leads_api);
+
 
   return app;
 };

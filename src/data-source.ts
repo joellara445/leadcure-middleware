@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource({
     password: "@123456789Abcd@",
     database: "leadcure",
     synchronize: true,
-    logging: true,
+    logging: false,
     entities: [User, Session, Lead],
     subscribers: [],
     migrations: [],
