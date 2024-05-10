@@ -41,8 +41,6 @@ async function register(createUserDto: CreateUserDto) {
     //this.emailServiceService.sendConfirmation(user.fullName, user.email);
     await userRepository.save(user);
     delete user.password;
-    var token = jwt.sign({ foo: 'bar' }, 'shhhhh');
-    console.log(token);
     return {
       user: {
         ...user, token: jwt.sign({
