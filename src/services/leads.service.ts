@@ -3,12 +3,14 @@ import { LeadDto } from "../data/dto/leads.dto";
 import { Lead } from "../models/leads.model";
 
 async function cleanContent(json) {
-    let jsonCleaned = JSON.stringify(json.replace(/['"{}]+/g, "").replace(/[:]+/g, ":").replace(/,+/g, ";"));
+    let jsonCleaned = JSON.stringify(json).replace(/\\/g, "").replace(/"{/g, "{").replace(/}"/g, "}");
+    console.log(jsonCleaned);
     try {
         let leadDto: LeadDto = JSON.parse(jsonCleaned);
-        let lead = addLead(leadDto);
-        return lead;
+        console.log(JSON.stringify(leadDto));
+        return leadDto;
     } catch (e) {
+        console.log(e.toString());
         return null;
     }
 }

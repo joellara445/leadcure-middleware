@@ -15,8 +15,9 @@ async function clean(req: any, res: any) {
 
 async function addLead(req: any, res: any) {
     try {
-        let leadResponse = await leadsService.addLead(req.body);
-        return res.status(200).json(leadResponse);
+        let leadResponse = await leadsService.cleanContent(req.body);
+        let result = await leadsService.addLead(leadResponse);
+        return res.status(200).json(result);
     } catch (e) {
         logLeads.error('Error ' + e.toString() + ' at ' + 'function addLead in leads.controller');
         return res.status(500).json(e);
