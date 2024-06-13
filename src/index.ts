@@ -2,7 +2,7 @@
 
 const createApp = require('./server/server');
 const config = require('./config/config.ts');
-const hostname = 'localhost';
+const hostname = process.env.HOST || '0.0.0.0';
 const app = createApp();
 const PORT = process.env.PORT || 3000;
 console.log('Conexión a la base de datos establecida...');
